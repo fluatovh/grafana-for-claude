@@ -75,7 +75,7 @@ clean:
 validate:
 	@echo "Validating configuration files..."
 	@docker run --rm -v $(PWD)/config/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro \
-		otel/opentelemetry-collector-contrib:0.96.0 validate --config=/etc/otel-collector-config.yaml && \
+		otel/opentelemetry-collector-contrib:0.120.0 validate --config=/etc/otel-collector-config.yaml && \
 		echo "OTel Collector config: OK" || echo "OTel Collector config: FAILED"
 	@echo "Validation complete."
 
