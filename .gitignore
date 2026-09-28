@@ -1,0 +1,28 @@
+# Data volumes (managed by Docker)
+data/
+
+# Claude Code files
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+*.backup
