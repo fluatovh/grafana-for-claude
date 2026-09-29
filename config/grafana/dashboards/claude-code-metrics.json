@@ -1821,6 +1821,304 @@
       "interval": "1m"
     },
     {
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "id": 73,
+      "type": "table",
+      "title": "Request Duration by Model",
+      "description": "LLM request duration per model over the selected range (api_request events). Average, p50 and p95 are computed over every request; tokens/s = output tokens / total request time.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "A",
+          "expr": "sum by (model) (count_over_time({job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "B",
+          "expr": "avg_over_time({job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_duration_ms | __error__=\"\" [$__range]) by (model)",
+          "queryType": "instant"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "C",
+          "expr": "quantile_over_time(0.5, {job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_duration_ms | __error__=\"\" [$__range]) by (model)",
+          "queryType": "instant"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "D",
+          "expr": "quantile_over_time(0.95, {job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_duration_ms | __error__=\"\" [$__range]) by (model)",
+          "queryType": "instant"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "E",
+          "expr": "sum by (model) (sum_over_time({job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_output_tokens | __error__=\"\" [$__range])) / sum by (model) (sum_over_time({job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_duration_ms | __error__=\"\" [$__range])) * 1000",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "model": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5
+            },
+            "renameByName": {
+              "model": "Mod\u00e8le",
+              "Value #A": "Appels mesur\u00e9s",
+              "Value #B": "Moyenne",
+              "Value #C": "p50",
+              "Value #D": "p95",
+              "Value #E": "tokens/s"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Moyenne",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Moyenne|p50|p95"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Moyenne"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 10000
+                    },
+                    {
+                      "color": "red",
+                      "value": 30000
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tokens/s"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "description": "Average input tokens sent per LLM request, per model",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 6,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "id": 74,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Tokens per Call",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "refId": "A",
+          "queryType": "range",
+          "interval": "5m",
+          "legendFormat": "{{model}}",
+          "expr": "avg_over_time({job=\"claude-code\"} | json | attributes_event_name=\"api_request\" | attributes_session_id=~\"$session\" | label_format model=`{{ regexReplaceAll \".*/\" .attributes_model \"\" }}` | unwrap attributes_input_tokens | __error__=\"\" [$__interval]) by (model)"
+        }
+      ],
+      "interval": "5m"
+    },
+    {
       "type": "row",
       "id": 72,
       "title": "Outils & permissions",
@@ -1830,7 +2128,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 57
       }
     },
     {
@@ -1846,7 +2144,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 58
       },
       "targets": [
         {
@@ -2053,7 +2351,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 50
+        "y": 58
       },
       "targets": [
         {
@@ -2209,7 +2507,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 68
       }
     },
     {
@@ -2225,7 +2523,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 61
+        "y": 69
       },
       "targets": [
         {
@@ -2403,7 +2701,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 77
       },
       "targets": [
         {
